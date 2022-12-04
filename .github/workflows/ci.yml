@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-      - mock
-  schedule:
-    - cron: '17 7 * * 1-5'  # run once per day Monday-Friday at 7:17am
 
 env:
   RUST_BACKTRACE: 1
@@ -28,51 +25,4 @@ jobs:
           export CURRENT_VERSION="$(./scripts/get_current_version.sh cargo-semver-checks)"
           git tag "v$CURRENT_VERSION"
           git push origin "v$CURRENT_VERSION"
-
-  upload-binary:
-    name: ${{ matrix.target }}
-    needs:
-      - publish
-    strategy:
-      matrix:
-        include:
-          - target: aarch64-unknown-linux-gnu
-          - target: aarch64-unknown-linux-musl
-          - target: aarch64-apple-darwin
-            os: macos-11
-          - target: x86_64-unknown-linux-gnu
-          - target: x86_64-unknown-linux-musl
-          - target: x86_64-apple-darwin
-            os: macos-10.15
-          - target: x86_64-pc-windows-msvc
-            os: windows-2019
-    runs-on: ${{ matrix.os || 'ubuntu-18.04' }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          persist-credentials: false
-
-      - name: Install rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          override: true
-
-      - name: Export RUSTFLAGS
-        run: echo "RUSTFLAGS=${RUSTFLAGS} -C target-feature=+crt-static" >> "${GITHUB_ENV}"
-        if: endsWith(matrix.target, 'windows-msvc')
-
-      - name: Upload binary
-        uses: taiki-e/upload-rust-binary-action@v1
-        with:
-          bin: cargo-semver-checks
-          target: ${{ matrix.target }}
-          tar: all
-          zip: windows
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CARGO_PROFILE_RELEASE_CODEGEN_UNITS: 1
-          CARGO_PROFILE_RELEASE_LTO: true
 
