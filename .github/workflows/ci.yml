@@ -192,6 +192,15 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - uses: Swatinem/rust-cache@v2
+
       # - id: check
       #   run: |
       #     set +e
